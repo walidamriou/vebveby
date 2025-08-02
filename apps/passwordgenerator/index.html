@@ -1,0 +1,294 @@
+<!--
+ @File index.html
+ @Author Walid Amriou
+ @Date 02/08/2025
+ @Description This file contains the main landing page of the VebVeby Password Generator
+-->
+
+<!doctype html>
+<html lang="en">
+
+<head>
+  <!-- Prevent search engines from indexing and following links on this page -->
+  <meta name="robots" content="noindex, nofollow">
+  <!-- Set the character encoding to UTF-8 -->
+  <meta charset="utf-8">
+  <!-- Configure the viewport for responsive design by sets the width of the viewport to be equal to the device 
+         width and  the initial zoom level when the page is first loaded to 1.0-->
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <!--  Description of the web page that used by search engines to display a summary or snippet of information 
+        about the webpage in search results. -->
+  <title>VebVeby Password Generator</title>
+  <!-- icon -->
+  <link rel="icon" href="./img/logo.png" type="image/png" />
+
+  <!-- CSS -->
+  <style>
+    html,
+    body {
+      height: 100%;
+      margin: 0;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .container {
+      flex: 1;
+    }
+
+    body {
+      flex: 1;
+      font-family: monospace;
+      background-color: #FAFAFA;
+      color: #212121;
+      margin: 0;
+      padding: 0;
+    }
+
+    .container {
+      max-width: 800px;
+      margin: 2rem auto;
+      padding: 1rem;
+      text-align: center;
+    }
+
+    .logo {
+      padding: 0.5rem;
+      border-radius: 50%;
+    }
+
+    #your_new_password_text {
+      font-weight: bold;
+      color: red;
+      visibility: hidden;
+    }
+
+    .input-field {
+      margin: 1rem 0;
+    }
+
+    input[type="number"],
+    input[type="text"] {
+      padding: 0.5rem;
+      width: 50%;
+      font-size: 1rem;
+      border: 1px solid #ccc;
+      border-radius: 5px;
+    }
+
+    .checkboxes {
+      text-align: left;
+      display: inline-block;
+      margin-top: 1rem;
+    }
+
+    .checkboxes label {
+      display: block;
+      margin-bottom: 0.5rem;
+    }
+
+    input[type="checkbox"] {
+      accent-color: #009966;
+      /* blue, change to any hex or named color */
+    }
+
+    button {
+      margin-top: 1.5rem;
+      padding: 0.75rem 1.5rem;
+      font-size: 1rem;
+      color: white;
+      background-color: #009966;
+      border: none;
+      border-radius: 10px;
+      cursor: pointer;
+    }
+
+    footer {
+      background-color: #212121;
+      color: white;
+      padding: 2rem;
+      font-size: 0.875rem;
+    }
+
+    mark {
+      background-color: #009966;
+      color: white;
+    }
+  </style>
+</head>
+
+<!-- BODY -->
+<body>
+  <!-- START OF THE PAGE -->
+  <div class="container">
+    <img src="./img/logo.png" alt="Logo" width="50" class="logo">
+    <h2><strong>VebVeby Password Generator</strong></h2>
+    <h3 id="your_new_password_text">Your new password</h3>
+    <p id="password_display">
+      <mark>&nbsp;Put the length and click the button to generate a password!&nbsp;</mark>
+    </p>
+
+    <div class="input-field">
+      <input type="number" id="passl" placeholder="Password length..." onkeypress="myFunction(event)" />
+    </div>
+
+    <div class="checkboxes">
+      <label><input type="checkbox" id="checkbox-1" checked> Lowercase (a-z)</label>
+      <label><input type="checkbox" id="checkbox-2" checked> Uppercase (A-Z)</label>
+      <label><input type="checkbox" id="checkbox-3" checked> Numbers (0-9)</label>
+      <label><input type="checkbox" id="checkbox-4" checked> Symbols (!@#$...)</label>
+      <label>Add custom symbols: <input type="text" id="input_symbols" /></label>
+    </div>
+
+    <button id="password_generate_button">Generate Password</button>
+  </div>
+  <div class="container">
+    <p>This is not a commercial product, but a personal tool I created for my own use. 
+      It does not store or transmit any generated passwords. Use it at your own risk. 
+      No guarantees are made regarding security, reliability, or fitness for any purpose. 
+      Please ensure you save your password before leaving the page or generating a new one.</p>
+  </div>
+
+  <footer>
+    <p style="margin-top: 2rem;">&copy; Walid Amriou 2025 — VebVeby Password Generator</p>
+  </footer>
+
+  <!-- END OF THE PAGE -->
+
+  <!-- JS -->
+  <script>
+    // Function to generate a random number within a specified range
+    function RandomVar_core(min, max) {
+      let range = max - min;
+      if (range <= 0) throw new Error('max must be larger than min');
+      let requestBytes = Math.ceil(Math.log2(range) / 8);
+      if (!requestBytes) return min;
+      let maxNum = Math.pow(256, requestBytes);
+      let ar = new Uint8Array(requestBytes);
+
+      while (true) {
+        window.crypto.getRandomValues(ar);
+        let val = 0;
+        for (let i = 0; i < requestBytes; i++) {
+          val = (val << 8) + ar[i];
+        }
+        if (val < maxNum - maxNum % range) {
+          return min + (val % range);
+        }
+      }
+    }
+
+    // Variables to hold the state of character inclusion
+    let iclude_lower_case = 1;
+    let iclude_Upper_case = 1;
+    let iclude_number = 1;
+    let iclude_symbols = 1;
+    let password_number_session = 0;
+    let password_display_flag = 0;
+
+    // Function to update the include states based on checkbox selections
+    function updateIncludeStates() {
+      iclude_lower_case = document.getElementById("checkbox-1").checked ? 1 : 0;
+      iclude_Upper_case = document.getElementById("checkbox-2").checked ? 1 : 0;
+      iclude_number = document.getElementById("checkbox-3").checked ? 1 : 0;
+      iclude_symbols = document.getElementById("checkbox-4").checked ? 1 : 0;
+    }
+
+
+    ["checkbox-1", "checkbox-2", "checkbox-3", "checkbox-4"].forEach(id => {
+      document.getElementById(id).addEventListener("change", updateIncludeStates);
+    });
+
+    // Function to get a random character based on the selected types
+    function getRandomType() {
+      let type_number_choose = '';
+      if (iclude_lower_case) type_number_choose += '1';
+      if (iclude_Upper_case) type_number_choose += '2';
+      if (iclude_number) type_number_choose += '3';
+      if (iclude_symbols) type_number_choose += '4';
+      let Randomtype = type_number_choose[RandomVar_core(0, type_number_choose.length)];
+      return Randomtype;
+    }
+
+    // Function to get a random variable based on the selected types
+    function getRandomVar() {
+      switch (getRandomType()) {
+        case '1': return String.fromCharCode(RandomVar_core(97, 123));
+        case '2': return String.fromCharCode(RandomVar_core(65, 91));
+        case '3': return String.fromCharCode(RandomVar_core(48, 58));
+        case '4':
+          const symbols = '!@#$%^&*(){}[]=<>/,.';
+          return symbols[RandomVar_core(0, symbols.length)];
+      }
+    }
+
+    // Function to set custom symbols in the password array
+    function setcustom(custom, passwordArray) {
+      if (custom !== '') {
+        for (let index = 0; index < custom.length; index++) {
+          let position = RandomVar_core(0, passwordArray.length);
+          passwordArray[position] = custom[index];
+        }
+      }
+      return passwordArray;
+    }
+
+    // Function to generate a password based on the selected criteria
+    function getpassword() {
+      if (!iclude_lower_case && !iclude_Upper_case && !iclude_number && !iclude_symbols) {
+        return "You should choose at least one type of characters!";
+      }
+
+      let password_length = parseInt(document.getElementById("passl").value);
+      if (isNaN(password_length)) return "You should put a length!";
+      if (password_length < 8) return "The length of the password should be greater or equal to 8";
+
+      let passwordArray = Array.from({ length: password_length }, () => getRandomVar());
+      passwordArray = setcustom(document.getElementById("input_symbols").value, passwordArray);
+      password_number_session++;
+      password_display_flag = 1;
+
+      return passwordArray.join('');
+    }
+
+    // Function to copy the generated password to the clipboard
+    function copyToClipboard(text) {
+      navigator.clipboard.writeText(text).then(() => console.log("Copied to clipboard"));
+    }
+
+    // Event listener for the password generation button
+    document.getElementById("password_generate_button").addEventListener("click", () => {
+      // Reset the password display flag and update the include states
+      updateIncludeStates();
+      // Generate the password
+      let password = getpassword();
+      // Get the display element and header
+      const display = document.getElementById("password_display");
+      const header = document.getElementById("your_new_password_text");
+
+      // Update the header visibility and content based on the generated password
+      if (password_display_flag && password.length >= 8) {
+        header.style.color = '#' + Math.floor(Math.random() * 16777215).toString(16);
+        header.style.visibility = "visible";
+        display.textContent = password;
+        copyToClipboard(password);
+      } 
+      else {
+        header.style.visibility = "visible";
+        display.innerHTML = `<mark>${password}</mark>`;
+      }
+      // Reset the password display flag
+      password_display_flag = 0;
+    });
+
+    // Function to handle Enter key press for password generation
+    function myFunction(event) {
+      if (event.keyCode === 13) {
+        // Prevent the default action of the Enter key
+        document.getElementById("password_generate_button").click();
+      }
+    }
+  </script>
+</body>
+
+</html>
