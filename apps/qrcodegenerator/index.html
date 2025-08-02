@@ -1,0 +1,177 @@
+<!--
+ @File index.html
+ @Author Walid Amriou
+ @Date 02/08/2025
+ @Description This file contains the main landing page of the VebVeby QR Code Generator
+-->
+
+<!doctype html>
+<html lang="en">
+
+<head>
+  <!-- Prevent search engines from indexing and following links on this page -->
+  <meta name="robots" content="noindex, nofollow">
+  <!-- Set the character encoding to UTF-8 -->
+  <meta charset="utf-8">
+  <!-- Configure the viewport for responsive design by sets the width of the viewport to be equal to the device 
+         width and  the initial zoom level when the page is first loaded to 1.0-->
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <!--  Description of the web page that used by search engines to display a summary or snippet of information 
+        about the webpage in search results. -->
+  <title>VebVeby QR code Generator</title>
+  <!-- icon -->
+  <link rel="icon" href="./assets/img/logo.png" type="image/png" />
+
+<script src="./assets/js/qrcode/qrcode.min.js"></script>
+
+  <!-- CSS -->
+  <style>
+    html,
+    body {
+      height: 100%;
+      margin: 0;
+      display: flex;
+      flex-direction: column;
+      font-family: monospace;
+      background-color: #FAFAFA;
+      color: #212121;
+    }
+
+    .container {
+      flex: 1;
+      max-width: 800px;
+      margin: 2rem auto;
+      padding: 1rem;
+      text-align: center;
+    }
+
+    .logo {
+      padding: 0.5rem;
+      border-radius: 50%;
+    }
+
+    input[type="text"] {
+      padding: 0.5rem;
+      width: 60%;
+      font-size: 1rem;
+      border: 1px solid #ccc;
+      border-radius: 5px;
+    }
+
+    button {
+      margin-top: 1rem;
+      padding: 0.75rem 1.5rem;
+      font-size: 1rem;
+      color: white;
+      background-color: #009966;
+      border: none;
+      border-radius: 10px;
+      cursor: pointer;
+    }
+
+    footer {
+      background-color: #212121;
+      color: white;
+      padding: 2rem;
+      font-size: 0.875rem;
+    }
+
+    .qr-code {
+      margin-top: 1rem;
+    }
+
+  </style>
+</head>
+
+<!-- BODY -->
+
+<body>
+  <!-- START OF THE PAGE -->
+  <div class="container">
+    <img src="./assets/img/logo.png" alt="Logo" width="50" class="logo">
+    <h2><strong>VebVeby QR Code Generator</strong></h2>
+
+    <input type="text" id="input_text" placeholder="Enter text to encode..." />
+    <br>
+    <button onclick="generateQR()">Generate QR Code</button>
+
+    <div class="qr-code" id="qr_code"></div>
+    <div id="download_container"></div>
+  </div>
+
+  <div class="container">
+    <p>This is not a commercial product, but a personal tool I created for my own use.
+      It does not store or transmit any generated QRcode. Use it at your own risk.
+      No guarantees are made regarding security, reliability, or fitness for any purpose.
+      Please ensure you save your QRcode before leaving the page or generating a new one.</p>
+      <br>
+      <p>this tool use qrcode generator js lib by davidshimjs</p>
+      <a href="./assets/js/qrcode/LICENSE" target="_blank">the lib License</a>
+  </div>
+
+  <footer>
+    <p>&copy; 2025 Walid Amriou — VebVeby QR Code Generator</p>
+  </footer>
+
+  <!-- END OF THE PAGE -->
+
+  <!-- JS -->
+  <script>
+    // Function to generate QR code
+    function generateQR() {
+      const qrContainer = document.getElementById("qr_code");
+      const downloadContainer = document.getElementById("download_container");
+      const input = document.getElementById("input_text").value.trim();
+
+      qrContainer.innerHTML = "";
+      downloadContainer.innerHTML = "";
+
+      if (!input) return;
+
+      const qr = new QRCode(qrContainer, {
+        text: input,
+        width: 220,
+        height: 220,
+        colorDark: "#000",
+        colorLight: "#fff",
+        correctLevel: QRCode.CorrectLevel.H
+      });
+
+      setTimeout(() => {
+        const img = qrContainer.querySelector("img") || qrContainer.querySelector("canvas");
+        if (!img) return;
+
+        img.style.display = "";
+        img.style.margin = "0 auto";
+        img.style.textAlign = "center";
+        qrContainer.style.textAlign = "center";
+
+        const url = img.src || img.toDataURL();
+        const link = document.createElement("a");
+        link.href = url;
+        // link.download = "qrcode.png";
+        const now = new Date();
+        const date = now.toISOString().slice(0, 10).replace(/-/g, ''); 
+        const time = now.toTimeString().split(' ')[0].replace(/:/g, ''); 
+
+        const words = input
+          .trim()
+          .split(/\s+/)
+          .slice(0, 2)
+          .join('_')
+          .replace(/[^\w\-]/g, '') || "qr";
+
+        link.download = `${words}_${date}_${time}.png`;
+
+        link.textContent = "Download QR Code";
+        link.style.marginTop = "1rem";
+        link.style.display = "inline-block";
+        link.style.color = "#009966";
+        link.style.fontWeight = "bold";
+        downloadContainer.appendChild(link);
+      }, 500);
+    }
+  </script>
+</body>
+
+</html>
